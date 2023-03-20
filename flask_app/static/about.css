@@ -1,0 +1,35 @@
+body {
+    font-family: sans-serif;
+    margin: 0;
+    padding: 0;
+}
+
+h2 {
+    color: #333;
+    margin-top: 30px;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+p {
+    font-size: 18px;
+    line-height: 1.5;
+    color: #555;
+}
+
+ul {
+    font-size: 18px;
+    line-height: 1.5;
+    list-style: none;
+}
+
+li::before {
+    content: "• ";
+    color: #aaa;
+    display: inline-block;
+    width: 1em;
+    margin-left: -1em;
+}
+.para {
+    text-align: center;
+}

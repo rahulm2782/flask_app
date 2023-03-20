@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="UTF-8">
+	<title>Result</title>
+	<link rel="stylesheet" type="text/css" href="{{ url_for('static',filename='mirnet.css')}}">
+
+</head>
+
+<body>
+	<h1>Result</h1>
+	<div class="container">
+		<div>
+			<h2>Original Image:</h2>
+			<img id="original_image" src="data:image/png;base64,{{original_image}}" alt="original image">
+		</div>
+
+		<div>
+			<h2>Output Image:</h2>
+			<img id="output" src="data:image/png;base64,{{enhanced_image}}" alt="enhanced image">
+		</div>
+	</div>
+
+	<div style="text-align: center;">
+		<a href="data:image/png;base64,{{enhanced_image}}" download="enhanced_image.jpg">
+			<button class="download">Download Output Image</button>
+		</a>
+		
+		<form action="/">
+			<button class="back">Home page</button>
+		</form>
+	</div>
+</body>
+</html>

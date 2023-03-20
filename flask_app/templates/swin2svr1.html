@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Result</title>
+	<link rel="stylesheet" href="{{ url_for('static',filename='swin2svr.css')}}">
+</head>
+<body>
+	<h1>Result</h1>
+	<div class="container">
+
+		<div>
+			<h2>Output Image:</h2>
+			<img src="data:image/jpeg;base64,{{encoded_super_image}}" alt="enhanced_image" height="320" width="320">
+			<p>Image size enhanced to : {{enhanced_image_size}}</p>
+		</div>
+	</div>
+
+	<div style="text-align: center;">
+		<a href="data:image/png;base64,{{encoded_super_image}}" download="enhanced_image.png">
+			<button class="download">Download Enhanced Image</button>
+		</a>
+		<br>
+		<form action="/">
+			<button class="back">Home page</button>
+		</form>
+	</div>
+</body>
+</html>

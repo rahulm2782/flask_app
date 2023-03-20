@@ -1,0 +1,80 @@
+html, body {
+    height: 100%;
+    }
+
+body {
+    background-color: gray;
+    margin: 0;
+    height:100%;
+	overflow: hidden;
+    font-family:Times New Roman;
+    }
+
+h1 {
+    text-align: center;
+    color: white;
+    margin-top: 15px;
+    background-color: rgb(0,0,0,0.3);
+    font-size: 60px;
+    }
+
+h2 {
+    color: white;
+    
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    margin: 0 10%;
+    margin-top: 20px;
+    }
+    
+
+.container > div {
+    flex: 1;
+    margin: 0 10px;
+    text-align: center;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 0px 10px 0px rgba(0,0,0,0.5);
+    background-color: rgb(0, 0, 0,0.5);
+    }
+
+img {
+    height: 320px;
+    width: 320px;
+    margin-top: 15px;
+
+    }
+
+.download { 
+    background-color: #4CAF50;
+    color: rgb(216, 215, 215);
+    border: none;
+    border-radius: 5px;
+    padding: 0.5em 1em;
+    font-size: 1em;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.5s ease-in-out;
+    margin-top: 10px;
+    }
+.back {
+    background-color: #4CAF50;
+    color: rgb(216, 215, 215);
+    font-size: 0.9em;
+    border: none;
+    margin-top: 10px;
+    padding: 0.3em 0.6em;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.5s ease-in-out;
+
+}
+
+button:hover {
+    background-color: blue;
+     }

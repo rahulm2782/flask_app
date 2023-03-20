@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='about.css') }}">
+</head>
+<body>
+    <h2>Introduction</h2>
+    <p> Our website provides users with the ability to enhance their digital images, either by improving their brightness and contrast in darker areas, or by increasing the resolution of images that are pixelated or otherwise low-quality. To achieve this, we've developed advanced deep learning models that can automatically enhance images based on their content.
+
+        With our image enhancement tools, users can quickly and easily improve the quality of their digital photos without the need for advanced editing software or technical expertise. Whether you're looking to enhance the visibility of a dimly lit photo, or to sharpen the details of an image that's become blurry due to low resolution, our website has you covered.
+        
+        Our deep learning algorithms are designed to analyze each image and identify areas that can be improved. By applying advanced image processing techniques, we can enhance the overall quality of the image and produce a result that's clearer, brighter, and more detailed than the original.
+        
+        Whether you're a professional photographer or just looking to improve your personal photos, our website offers a simple, powerful solution for enhancing your digital images. Try it out today and see the difference for yourself!
+        </p>
+    <h2>Image Enhancement Tools</h2>
+    <p>Choose from one of the following tools to enhance your images:</p>
+    <ul>
+        <li><strong>Dark Image Enhancer:</strong> Click on Image 1 to enhance dim or low light photos. Images can only be as large as 480 x 480. If an image submitted is larger than this size, it will be automatically resized to fit.<br /><br /></li>
+        <li><strong>Low Resolution Image Enhancer:</strong> Click on Image 2 to enhance low resolution images. This model can accept images as large as 500 x 500. If an image submitted is larger than this size, it will be automatically resized to fit.<br /><br /></li>
+        <li><strong>Combined Image Enhancement:</strong> Click on both Image 1 and Image 2 to first implement the Dark Image Enhancer model and then enhance the resulting image with the Low Resolution Image Enhancer.<br /><br /></li>
+    </ul>
+    
+    <div class="para">
+        <h2>The Dark Image Enhancer</h2>
+        <p>This deep learning model enhances dim or low light photos.</p>
+        <img class="image_1" src="data:image/png;base64,{{ dark_en_encoded }}" alt="Dark Image" height="350" width="700">
+    
+    
+        <h2>The Low Resolution Image Enhancer</h2>
+        <p>This deep learning model enhances low resolution images.</p>
+        <img class="image_2" src="data:image/png;base64,{{ en_encode }}" alt="" height="350" width="700">
+    
+        <h2>The Combined Image Enhancement</h2>
+        <p>This will first implement the Dark Image Enhancer model and then enhance the resulting image with the Low Resolution Image Enhancer.</p>
+        <img class="image_3" src="data:image/png;base64,{{ dr_en_encode }}" alt="" height="350" width="700">
+
+
+    </div>        
+</body>
+</html>
