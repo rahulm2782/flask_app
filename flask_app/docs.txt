@@ -1,0 +1,117 @@
+app.py
+
+This code defines a function called index() that takes no arguments. 
+Within the function, the first thing that occurs is the buffer() function being called on two different image files: ying-modified.png and both.png. This function appears to take an image file as input and convert it into a string of bytes.
+Then, the render_template() function is called with the following arguments: 
+
+index.html: this is the name of the file that will be rendered
+dark_image_encode: this is the variable name to which the string of bytes for the ying-modified.png image is assigned
+both_image_encode: this is the variable name to which the string of bytes for the both.png image is assigned
+
+Finally, the function returns the rendered index.html file along with the two images encoded as byte strings. 
+Here is the code: 
+def index():
+    """
+    The function takes the image file and converts it into a string of bytes
+    :return: The index.html file is being returned and this file is passed as icon image to index.html.
+    """
+    dark_image_encode = functions.buffer('./images/ying-modified.png')
+    both_image_encode = functions.buffer('./images/both.png')
+    return render_template('index.html',dark_image_encode=dark_image_encode,
+                           both_image_encode=both_image_encode)
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+The given code defines a Python function named about which takes no arguments. 
+The function starts by encoding three different image files, namely dark.png, en.png, and dk_en.png, to strings using the buffer function from the external module functions. 
+After encoding the images, the function returns an HTTP response render_template by passing the encoded images and about.html file as arguments. The about.html file is a HTML template used for rendering the about page of a web application. 
+The dark_en_encoded, en_encode, and dr_en_encode arguments passed to the render_template function correspond respectively to the encoded string values of the dark.png, en.png, and dk_en.png images which will be used to display the sample model outputs on the about page.
+
+---------------------------------------------------------------------------------------------------------------------------------
+
+This code is a function called predict() that takes an image file from the user, sends it to the server, gets the response, and renders the response in the browser. The function has the following steps:
+
+Check if request method is POST
+Get the uploaded file extension and validate if it is either JPG or PNG
+Convert the image to bytes and encode it in base64
+Get selected response from the form
+If only one response is selected, send the image to the corresponding model, get the output and render it on the corresponding template
+If two response are selected, send the image to the first model, get the output, pass the output to the second model, get the final output and render it in the corresponding template
+If no responses are selected or if an error occurs during the process, render the error template with corresponding message
+
+Here is the full code:
+def predict():
+    """
+    It takes an image file from the user, sends it to the server, gets the response, and renders the
+    response in the browser
+    :return: Returns the response as per the model selected by the user.
+    """
+    # Step 1: Check if request method is POST
+    if request.method =='POST':
+        image_file = request.files['file']
+        if not image_file:
+            return render_template('error.html', message='Please upload a image file')
+        
+        # Step 2: Get the uploaded file extension and validate if it is either JPG or PNG
+        file_extension = os.path.splitext(image_file.filename)[1].lower()
+        if file_extension in ('.jpg', '.jpeg'):
+            image_file = Image.open(image_file)
+            buffer = io.BytesIO()
+            image_file.save(buffer, format='JPEG')
+        elif file_extension == '.png':
+            image_file = Image.open(image_file)
+            buffer = io.BytesIO()
+            image_file.save(buffer, format='PNG')
+        else:
+            # Handle unsupported formats
+            return render_template('error.html', message='Unsupported file format only jpg,jpeg and png files supported')
+        
+        # Step 3: Convert the image to bytes and encode it in base64
+        original_image_bytes = buffer.getvalue()
+        encoded_original_image = base64.b64encode(original_image_bytes).decode()
+        
+        # Step 4: Get selected response from the form
+        response_selected = request.form.getlist('response[]')
+        
+        if len(response_selected) == 1:
+            # Step 5a: If only one response is selected, send the image to the corresponding model, get the output and render it on the corresponding template
+            if response_selected[0] == '1':
+                response = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes})
+                try:
+                    encoded_enhanced_image = response.json()['OutputImage']
+                    return render_template('mirnet.html',original_image=encoded_original_image,enhanced_image=encoded_enhanced_image)
+                except:
+                    return render_template('error.html',message="Sorry! Something went wrong, try a different image")
+            elif response_selected[0] == '2':
+                response = requests.post('http://127.0.0.1:8080/superimage',files={'image':original_image_bytes})
+                try:
+                    encoded_super_image = response.json()['super_image']
+                    enhanced_image_size = response.json()['enhanced_size']
+                    enhanced_image_size = f'(Height: {enhanced_image_size[0]} px, Width: {enhanced_image_size[1]} px)'
+                    return render_template('swin2sr.html',encoded_super_image=encoded_super_image,enhanced_image_size=enhanced_image_size)
+                except:
+                    return render_template('error.html',message="Sorry! Something went wrong, try a different image")
+        
+        elif len(response_selected) == 2:
+            # Step 5b: If two response are selected, send the image to the first model, get the output, pass the output to the second model, get the final output and render it in the corresponding template
+            response1 = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes})
+            try:
+                encoded_enhanced_image = response1.json()['OutputImage']
+                image_bytes = base64.b64decode(encoded_enhanced_image)
+                response2 = requests.post('http://127.0.0.1:8080/superimage',files={'image':image_bytes})
+                encoded_super_image = response2.json()['super_image']
+                encoded_original_image = base64.b64encode(original_image_bytes).decode()
+                original_image_size = response2.json()['original_size']
+                enhanced_image_size = response2.json()['enhanced_size']
+                original_image_size = f'(Height: {original_image_size[0]} px, Width: {original_image_size[1]} px)'
+                enhanced_image_size = f'(Height: {enhanced_image_size[0]} px, Width: {enhanced_image_size[1]} px)'
+                return render_template('both.html',encoded_super_image=encoded_super_image,encoded_original_image=encoded_original_image,original_image_size=original_image_size,enhanced_image_size=enhanced_image_size)
+            except:
+                return render_template('error.html',message="Sorry! Something went wrong, try a different image")
+        
+        else:
+            # Step 6: If no responses are selected or if an error occurs during the process, render the error template with corresponding message
+            return render_template('error.html',message = "No options selected, select any one")
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------

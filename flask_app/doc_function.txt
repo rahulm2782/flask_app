@@ -1,0 +1,153 @@
+function documentation
+
+The code above takes an input image and enhances it by resizing to 480x480 (if larger) and running it through a model called model_mirnet. The output is the enhanced image in the form of an Image object.
+Here's what the code does:
+
+The input image is opened using the Image module and a width and height variable is created using the size method of the Image object.
+If the width and height of the image are both less than 480, the image is not resized, otherwise, it is resized using the resize() method and a tuple of (480,480) as its argument.
+The image is then converted to a numpy array and normalized by dividing each pixel value by 255.
+The array is then expanded along the axis 0.
+The model_mirnet is then used to predict the output given the input image.
+The enhanced_image variable is created and initialized to the first element of the output array.
+The pixel values of enhanced_image is then clipped between 0 and 255 and then converted back to a numpy array of unsigned integers using astype(np.uint8).
+Lastly, the numpy array is converted back to an Image object and returned as the output.
+
+Here's the code written in its entirety:
+def enhance_image(img):
+    """
+    It takes an image as input, resizes it to 480x480 if it's larger than that, and then runs it through
+    the model
+    
+    :param img: The image that you want to enhance
+    :return: The enhanced image is being returned.
+    """
+    # Open the input image
+    image = Image.open(io.BytesIO(img))
+    
+    # Get the width and height of the image
+    width,height = image.size
+    
+    # Check if the width and height are less than 480
+    if width < 480 and height < 480:
+        # If they are, don't resize the image
+        pass
+    else:
+        # If they're not, resize the image to 480x480
+        image = image.resize((480,480))
+
+    # Convert the image to a numpy array and normalize
+    image = np.array(image)
+    image = image/255.0
+    
+    # Expand the array along the axis 0
+    image = np.expand_dims(image,axis=0)
+
+    # Use the model to predict the output given the input
+    output = model_mirnet.predict(image)
+
+    # Get the enhanced image and clip its pixel values
+    enhanced_image = output[0]
+    enhanced_image = np.clip(enhanced_image*255,0,255)
+    
+    # Convert the pixel values to unsigned integers
+    enhanced_image = enhanced_image.astype(np.uint8)
+    
+    # Convert the numpy array back to an Image object and return it
+    enhanced_image = Image.fromarray(enhanced_image)
+    return enhanced_image
+
+
+    ----------------------------------------------------------------------------
+    This code defines a function named buffer which takes a single parameter path. 
+The function contains a docstring that explains what it does and how to use it. It takes the path to an image file as input and returns a base64 encoded string of the image.
+The function starts by opening the image file located at path using the Image.open() function. The resulting image object is assigned to a variable called image.
+Next, the function creates a BytesIO object using the io.BytesIO() function and assigns it to a variable called temp.
+The image object is then saved in PNG format into the temp object using the .save() method of the image object.
+Finally, the data in the temp object is encoded in base64 format using the base64.b64encode() function and then decoded as a string using the .decode() method. This resulting string is then returned by the function. 
+Here's the code: 
+import base64
+import io
+from PIL import Image
+
+def buffer(path):
+    """
+    It takes a path to an image and returns a base64 encoded string of the image.
+    
+    :param path: The path to the image file
+    :return: A string of base64 encoded data.
+    """
+    image = Image.open(path)
+    temp = io.BytesIO()
+    image.save(temp, format='PNG')
+    return base64.b64encode(temp.getvalue()).decode()
+
+-------------------------------------------------------------------------------------------
+
+The code takes an image as an input, resizes it to 500x500 if it's larger than that, then applies some enhancements to the image using the Swin Transformer model. Here's a plan outlining the steps in more detail:
+
+Open the image using the given path and store it in the variable image
+Get the width and height of the image using the size method of image
+If either the width or height of the image is greater than 500, resize the image to 500x500 using the resize method of image
+Store the size of the image in the variable image_size
+Create an instance of Swin2SRImageProcessor class to convert the image to tensor.
+Convert the image to a tensor using the pixel_values method of processor, and then move the tensor to the device
+Try to apply the Swin Transformer model on the tensor using the model_swin model
+If the model raises a RuntimeError due to the lack of memory, switch to the CPU and reapply the model
+Convert the output of the model to a numpy array with values between 0 and 1
+Move the axis from 0 to -1 using np.moveaxis
+Convert the array to unsigned integer by multiplying it by 255, rounding it, and converting it to an unsigned integer using the round and astype methods.
+Convert the enhanced image to Image format
+Return the image_size and the enhanced_image together.
+
+Here's the corresponding code: 
+def img_enhance(path):
+    """
+    It takes an image, resizes it to 500x500, converts it to a tensor, runs it through the model, and
+    returns the output.
+    
+    :param path: The path to the image file
+    :return: The image size and the enhanced image.
+    """
+    image = Image.open(io.BytesIO(path))
+
+    # get the size of the image
+    width, height = image.size
+
+    # It's resizing the image to 500x500 if it's larger than that.
+    if width < 500 and height < 500:
+        pass
+    else:
+        image = image.resize((500,500))
+    image_size = image.size
+    
+    # Converting the image to a tensor.
+    processor = Swin2SRImageProcessor()  #default rescaled
+    pixel_values = processor(image, return_tensors="pt").pixel_values.to(device)
+    
+    # It's trying to run the model on the GPU, and if it fails, it will run it on the CPU.
+    try:
+        with torch.no_grad():
+            outputs = model_swin(pixel_values)
+    except RuntimeError as error:
+        if 'out of memory' in str(error):
+            print('Warning: out of GPU memory. Switching to CPU.')
+            torch.cuda.empty_cache()
+            model_swin_cpu = model_swin.to('cpu')
+            pixel_values_cpu = pixel_values.to('cpu')
+            # It's telling the model not to calculate the gradients.
+            with torch.no_grad():
+                outputs = model_swin_cpu(pixel_values_cpu)
+        else:
+            raise error
+    else:
+        # It's taking the output of the model, and it's converting it to a numpy array.
+        output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
+        # It's moving the axis from 0 to -1.
+        output = np.moveaxis(output, source=0, destination=-1)
+        # It's converting the output to a numpy array, and then it's multiplying it by 255.0, rounding
+        # it, and then it's converting it to an unsigned integer.
+        output = (output * 255.0).round().astype(np.uint8)  
+        output = Image.fromarray(output)
+        
+        return image_size,output
+

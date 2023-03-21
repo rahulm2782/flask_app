@@ -1,0 +1,89 @@
+models
+
+The given code defines a function enhance() which enhances an input image and returns a base64 encoded string of the enhanced image in JSON format. Here's the detailed plan for the implementation:
+
+Get the image file from the user through request object and read it using the read() method. 
+
+image_file = request.files['file'].read()
+
+
+Call the enhance_image() function defined in the functions module and pass the read image file as an argument to obtain the enhanced image. 
+
+enhanced_image = functions.enhance_image(image_file)
+
+
+Create an object of io.BytesIO() to store the enhanced image in memory.
+
+buffer = io.BytesIO()
+
+
+Save the enhanced image object to the buffer object. Use format='JPEG' parameter to make sure the image is saved in JPEG format.
+
+enhanced_image.save(buffer, format='JPEG')
+
+
+Convert the image stored in the buffer object to byte strings using b64encode() method of base64.
+
+encoded_output_img = base64.b64encode(buffer.getvalue()).decode()
+
+
+Return a JSON object containing the encoded image string with key "OutputImage".
+
+return jsonify({"OutputImage" : encoded_output_img})
+
+
+
+Here's the implementation of the plan in the form of the complete code:
+import io
+import base64
+
+def enhance():
+    """
+    It takes an image file, enhances it using the function defined, saves it to a buffer, encodes it, and returns it as a JSON
+    object.
+    :return: The enhanced image is being returned as a base64 encoded string.
+    """
+    image_file = request.files['file'].read()  #reading file as binary
+    enhanced_image = functions.enhance_image(image_file)  
+    buffer = io.BytesIO()
+    enhanced_image.save(buffer,format='JPEG')
+    encoded_output_img = base64.b64encode(buffer.getvalue()).decode() #converting the image into byte strings
+
+    return jsonify({"OutputImage" : encoded_output_img})
+
+-------------------------------------------------------------------------------------------------------------------------------------
+
+The above code takes an image as input, enhances it, and returns the enhanced image along with the size of both the original and enhanced images.
+Here is the plan in pseudocode:
+1. Define the function named super_image.
+2. Get the image data using request.files['image'].read().
+3. Pass the image data to the img_enhance function which returns the enhanced image and the size of the original image.
+4. Get the size of the enhanced image.
+5. Create a buffer.
+6. Save the enhanced image to the buffer in JPEG format.
+7. Encode the buffer using base64 encoding.
+8. Return the encoded image along with the original and enhanced image sizes in JSON format.
+
+Here is the resulting code:
+def super_image():
+    """
+    It takes an image, enhances it, and returns the enhanced image and the size of the original and
+    enhanced images.
+    :return: The super_image is being returned as a base64 encoded string.
+    """
+    image = request.files['image'].read()
+
+    original_image_size, super_image = functions.img_enhance(image)
+    super_image_size = super_image.size
+
+    buffer = io.BytesIO()
+    super_image.save(buffer, format='JPEG')
+    encoded_super_image = base64.b64encode(buffer.getvalue()).decode()
+    return jsonify({
+        'super_image': encoded_super_image,
+        'enhanced_size': super_image_size,
+        'original_size': original_image_size
+    })
+
+
+

@@ -11,18 +11,22 @@ app = Flask(__name__)
 @app.route('/')
 def index():
     """
-    It takes the images from the images folder and encodes them into base64 strings
-    :return: the rendered template of index.html which is the home page.
+    The function takes the image file and converts it into a string of bytes
+    :return: The index.html file is being returned and this file is passed as icon image to index.html.
     """
-    dark_image_encode = functions.encode(functions.buffer('./images/ying-modified.png'))
-    both_image_encode = functions.encode(functions.buffer('./images/both.png'))
-    return render_template('index1.html',dark_image_encode=dark_image_encode,
+    dark_image_encode = functions.buffer('./images/ying-modified.png')
+    both_image_encode = functions.buffer('./images/both.png')
+    return render_template('index.html',dark_image_encode=dark_image_encode,
                            both_image_encode=both_image_encode)
 @app.route('/about')
 def about():
-    dark_en_encoded = functions.encode(functions.buffer('./images/dark.png'))
-    en_encode = functions.encode(functions.buffer('./images/en.png'))
-    dr_en_encode = functions.encode(functions.buffer('./images/dk_en.png'))
+    """
+    It takes the image files and encodes them into a string.
+    :return: the image which are actual sample of model outputs shall be returned to the about page.
+    """
+    dark_en_encoded = functions.buffer('./images/dark.png')
+    en_encode = functions.buffer('./images/en.png')
+    dr_en_encode = functions.buffer('./images/dk_en.png')
     return render_template('about.html',dark_en_encoded=dark_en_encoded,
                            en_encode=en_encode,
                            dr_en_encode=dr_en_encode)
@@ -31,10 +35,9 @@ def about():
 @app.route('/predict', methods=['POST'])
 def predict():
     """
-    The function takes an image file as input, converts it to base64 encoded string, sends it to the
-    server, gets the response, converts the response to base64 encoded string and returns it to the
-    client
-    :return: The return value of the function is the response object.
+    It takes an image file from the user, sends it to the server, gets the response, and renders the
+    response in the browser
+    :return: Returns the response as per the model selected by the user.
     """
     if request.method =='POST':
         image_file = request.files['file']
@@ -62,50 +65,70 @@ def predict():
         response_selected = request.form.getlist('response[]')
 
         if len(response_selected) == 1:
+
+            #Dark image enhancer model
             if response_selected[0] == '1':
-                response = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes})
+                #request sent to dark image enhancer 
+                response = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes}) #image in form of bytes are sent
 
-                encoded_enhanced_image = response.json()['OutputImage']
+                try:
+                    encoded_enhanced_image = response.json()['OutputImage']   #response output a json file with image as string encoded 
 
-                
-                
-                return render_template('mirnet.html',original_image=encoded_original_image,enhanced_image=encoded_enhanced_image)
-            
+                    #return original image encoded as tring with the model output in mirnet webpage to be used for side by side comparission
+                    return render_template('mirnet.html',original_image=encoded_original_image,enhanced_image=encoded_enhanced_image)
+                except:
+                    return render_template('error.html',message="Sorry! Something went wrong, try a different image")
+            #Low resolution image enhancer model
             elif response_selected[0] == '2':
-                response = requests.post('http://127.0.0.1:8080/superimage',files={'image':original_image_bytes})
-                encoded_super_image = response.json()['super_image']
+
+                #request sent through api
+                response = requests.post('http://127.0.0.1:8080/superimage',files={'image':original_image_bytes}) 
+                    
+                try:    
+                    encoded_super_image = response.json()['super_image']     #output image in byte format
+                    enhanced_image_size = response.json()['enhanced_size']   #size of the enhanced image as a list [height, width]
+
+
+                    enhanced_image_size = f'(Height: {enhanced_image_size[0]} px, Width: {enhanced_image_size[1]} px)' #size of enhanced image as string
+
+                    #sending encoded output image and size
+                    return render_template('swin2sr.html',encoded_super_image=encoded_super_image,
+                                        enhanced_image_size=enhanced_image_size)  #string sent to web page of the model swinsr
+                except:
+                    return render_template('error.html',message="Sorry! Something went wrong, try a different image")    
+        
+        #Combined model
+        elif len(response_selected) == 2:
+            #when user selects both option 1 and 2 that is both models working simultaneously
+            response1 = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes}) #sending original image as bytes as a request to model darkimage enhancer
+            try:
+                encoded_enhanced_image = response1.json()['OutputImage'] #output from model as string
             
-                enhanced_image_size = response.json()['enhanced_size']
+                image_bytes = base64.b64decode(encoded_enhanced_image)  #decoding string to bytes
+
+                response2 = requests.post('http://127.0.0.1:8080/superimage',files={'image':image_bytes}) #loading the output from dark image enhancer model to low resolution enhancer model
+                encoded_super_image = response2.json()['super_image'] #image output from model as string
+
+                encoded_original_image = base64.b64encode(original_image_bytes).decode()  
+
+               # Getting the size of the image and converting it into a string.
+                original_image_size = response2.json()['original_size']  #size of original image as list [height, width]
+                enhanced_image_size = response2.json()['enhanced_size']
+                original_image_size = f'(Height: {original_image_size[0]} px, Width: {original_image_size[1]} px)'
                 enhanced_image_size = f'(Height: {enhanced_image_size[0]} px, Width: {enhanced_image_size[1]} px)'
 
 
 
-                return render_template('swin2svr1.html',encoded_super_image=encoded_super_image,
-                                encoded_original_image=encoded_original_image,
-                                    enhanced_image_size=enhanced_image_size)
-        
-        elif len(response_selected) == 2:
-            response1 = requests.post('http://127.0.0.1:8080/enhance',files={'file':original_image_bytes})
-            encoded_enhanced_image = response1.json()['OutputImage']
-           
-            image_bytes = base64.b64decode(encoded_enhanced_image)
+                # Returning the template file both.html with the parameters encoded_super_image,
+                # encoded_original_image, original_image_size, enhanced_image_size.
 
-            response2 = requests.post('http://127.0.0.1:8080/superimage',files={'image':image_bytes})
-            encoded_super_image = response2.json()['super_image']
-
-            encoded_original_image = base64.b64encode(original_image_bytes).decode()
-
-            original_image_size = response2.json()['original_size']
-            enhanced_image_size = response2.json()['enhanced_size']
-            original_image_size = f'(Height: {original_image_size[0]} px, Width: {original_image_size[1]} px)'
-            enhanced_image_size = f'(Height: {enhanced_image_size[0]} px, Width: {enhanced_image_size[1]} px)'
-
-
-            return render_template('both.html',encoded_super_image=encoded_super_image,
-                                    encoded_original_image=encoded_original_image,
-                                    original_image_size=original_image_size,
-                                    enhanced_image_size=enhanced_image_size
-            )
+                return render_template('both.html',encoded_super_image=encoded_super_image,
+                                        encoded_original_image=encoded_original_image,
+                                        original_image_size=original_image_size,
+                                        enhanced_image_size=enhanced_image_size)
+            
+            except:
+                return render_template('error.html',message="Sorry! Something went wrong, try a different image")
         
         else:
             return render_template('error.html',message = "No options selected, select any one")

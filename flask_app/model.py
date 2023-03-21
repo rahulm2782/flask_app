@@ -12,24 +12,25 @@ app = Flask(__name__)
 def index():
     return "Model Index"
 
+
+#Dark image enhancer
 @app.route('/enhance',methods=['POST'])
 def enhance():
     """
-    It takes an image file, enhances it, saves it to a buffer, encodes it, and returns it as a JSON
+    It takes an image file, enhances it using the function defined, saves it to a buffer, encodes it, and returns it as a JSON
     object.
     :return: The enhanced image is being returned as a base64 encoded string.
     """
-  
-    image_file = request.files['file'].read()
-    enhanced_image = functions.enhance_image(image_file)
+    image_file = request.files['file'].read()  #reading file as binary
+    enhanced_image = functions.enhance_image(image_file)  
     buffer = io.BytesIO()
     enhanced_image.save(buffer,format='JPEG')
-    encoded_output_img = base64.b64encode(buffer.getvalue()).decode()
+    encoded_output_img = base64.b64encode(buffer.getvalue()).decode() #converting the image into byte strings
 
     return jsonify({"OutputImage" : encoded_output_img})
 
 
-
+#Low resolution image enhancer
 @app.route('/superimage', methods=['POST'])
 def super_image():
     """
@@ -39,7 +40,7 @@ def super_image():
     """
     image = request.files['image'].read()
 
-    original_image_size,super_image = functions.img_enhance(image)
+    original_image_size,super_image = functions.img_enhance(image)  #refer image_enhance in functions.py
     super_image_size = super_image.size
 
     buffer = io.BytesIO()

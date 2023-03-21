@@ -1,3 +1,4 @@
+# importing the necessary libraries.
 from PIL import Image
 import numpy as np
 import io
@@ -8,6 +9,7 @@ import keras
 import base64
 
 
+# loading the models.
 model_mirnet = keras.models.load_model('./models/keras_mirnet.h5')
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -16,16 +18,15 @@ model_swin = Swin2SRForImageSuperResolution.from_pretrained("caidas/swin2SR-clas
 model_swin.load_state_dict(torch.load("./models/swin2sr_model.pth"))
 
 
-def enhance_image(variable):
+def enhance_image(img):
     """
-    It takes an image as input, resizes it to 320x320, normalizes it, and then passes it through the
-    model. 
-    The output is then converted back to an image and returned.
+    It takes an image as input, resizes it to 480x480 if it's larger than that, and then runs it through
+    the model
     
-    :param variable: The image that you want to enhance
+    :param img: The image that you want to enhance
     :return: The enhanced image is being returned.
     """
-    image = Image.open(io.BytesIO(variable))
+    image = Image.open(io.BytesIO(img))
     width,height = image.size
     if width < 480 and height < 480:
         pass
@@ -47,52 +48,41 @@ def enhance_image(variable):
 
 def buffer(path):
     """
-    It takes a path to an image, opens it, saves it to a temporary buffer, and returns the buffer as a
-    byte array
+    It takes a path to an image and returns a base64 encoded string of the image.
     
     :param path: The path to the image file
-    :return: The image is being converted to a PNG format and then being returned as a byte string.
+    :return: A string of base64 encoded data.
     """
     image = Image.open(path)
     temp = io.BytesIO()
     image.save(temp, format='PNG')
-    return temp.getvalue()
-
-def encode(bytes):
-    """
-    It takes a byte array and returns a base64 encoded string
-    
-    :param bytes: The bytes to be encoded
-    :return: A string
-    """
-    return base64.b64encode(bytes).decode()
-
+    return base64.b64encode(temp.getvalue()).decode()
 
 
 def img_enhance(path):
     """
-    It takes an image, resizes it to 500x500 if it's larger than that, and then runs it through the
-    model.
+    It takes an image, resizes it to 500x500, converts it to a tensor, runs it through the model, and
+    returns the output.
     
-    :param path: the path to the image you want to enhance
-    :return: The image size and the enhanced image
+    :param path: The path to the image file
+    :return: The image size and the enhanced image.
     """
     image = Image.open(io.BytesIO(path))
 
     # get the size of the image
     width, height = image.size
 
-    # if the size is already less than or equal to 320x320, keep it as it is
-        # resize the image to 480x480
+    # It's resizing the image to 500x500 if it's larger than that.
     if width < 500 and height < 500:
         pass
     else:
         image = image.resize((500,500))
     image_size = image.size
-
+    # Converting the image to a tensor.
     processor = Swin2SRImageProcessor()  #default rescaled
     pixel_values = processor(image, return_tensors="pt").pixel_values.to(device)
     
+    # It's trying to run the model on the GPU, and if it fails, it will run it on the CPU.
     try:
         with torch.no_grad():
             outputs = model_swin(pixel_values)
@@ -102,20 +92,19 @@ def img_enhance(path):
             torch.cuda.empty_cache()
             model_swin_cpu = model_swin.to('cpu')
             pixel_values_cpu = pixel_values.to('cpu')
+           # It's telling the model not to calculate the gradients.
             with torch.no_grad():
                 outputs = model_swin_cpu(pixel_values_cpu)
         else:
             raise error
     else:
+        # It's taking the output of the model, and it's converting it to a numpy array.
         output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
+        # It's moving the axis from 0 to -1.
         output = np.moveaxis(output, source=0, destination=-1)
+        # It's converting the output to a numpy array, and then it's multiplying it by 255.0, rounding
+        # it, and then it's converting it to an unsigned integer.
         output = (output * 255.0).round().astype(np.uint8)  
         output = Image.fromarray(output)
+        
         return image_size,output
-    
-    output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
-    output = np.moveaxis(output, source=0, destination=-1)
-    output = (output * 255.0).round().astype(np.uint8)  
-    output = Image.fromarray(output)
-    
-    return image_size,output
