@@ -12,12 +12,13 @@ app = Flask(__name__)
 def index():
     """
     The function takes the image file and converts it into a string of bytes
-    :return: The index.html file is being returned and this file is passed as icon image to index.html.
+    :return: The index.html file is being returned and the image is passed as icon image for models in index.html.
     """
     dark_image_encode = functions.buffer('./images/ying-modified.png')
-    both_image_encode = functions.buffer('./images/both.png')
+    both_image_encode = functions.buffer('./images/img_en_.png')
     return render_template('index.html',dark_image_encode=dark_image_encode,
                            both_image_encode=both_image_encode)
+#about page
 @app.route('/about')
 def about():
     """

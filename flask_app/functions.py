@@ -4,6 +4,7 @@ import numpy as np
 import io
 import torch
 from transformers import Swin2SRForImageSuperResolution
+from transformers import Swin2SRForImageSuperResolution
 from transformers import Swin2SRImageProcessor
 import keras
 import base64
@@ -26,7 +27,7 @@ def enhance_image(img):
     :param img: The image that you want to enhance
     :return: The enhanced image is being returned.
     """
-    image = Image.open(io.BytesIO(img))
+    image = Image.open(io.BytesIO(img)).convert('RGB')
     width,height = image.size
     if width < 480 and height < 480:
         pass
@@ -61,13 +62,15 @@ def buffer(path):
 
 def img_enhance(path):
     """
-    It takes an image, resizes it to 500x500, converts it to a tensor, runs it through the model, and
-    returns the output.
+    It's taking the image, resizing it if it's larger than 500x500, converting it to a tensor, running
+    it through the model, and then converting the output to a numpy array, and then converting it to an
+    image.
     
-    :param path: The path to the image file
-    :return: The image size and the enhanced image.
+    :param path: The path to the image
+    :return: The image size and the output.
     """
-    image = Image.open(io.BytesIO(path))
+    # It's converting the image path to a PIL image.
+    image = Image.open(io.BytesIO(path)).convert('RGB')  #
 
     # get the size of the image
     width, height = image.size
@@ -97,14 +100,14 @@ def img_enhance(path):
                 outputs = model_swin_cpu(pixel_values_cpu)
         else:
             raise error
-    else:
-        # It's taking the output of the model, and it's converting it to a numpy array.
-        output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
-        # It's moving the axis from 0 to -1.
-        output = np.moveaxis(output, source=0, destination=-1)
-        # It's converting the output to a numpy array, and then it's multiplying it by 255.0, rounding
-        # it, and then it's converting it to an unsigned integer.
-        output = (output * 255.0).round().astype(np.uint8)  
-        output = Image.fromarray(output)
-        
-        return image_size,output
+    
+    # It's taking the output of the model, and it's converting it to a numpy array.
+    output = outputs.reconstruction.data.squeeze().float().cpu().clamp_(0, 1).numpy()
+    # It's moving the axis from 0 to -1.
+    output = np.moveaxis(output, source=0, destination=-1)
+    # It's converting the output to a numpy array, and then it's multiplying it by 255.0, rounding
+    # it, and then it's converting it to an unsigned integer.
+    output = (output * 255.0).round().astype(np.uint8)  
+    output = Image.fromarray(output)
+    
+    return image_size,output

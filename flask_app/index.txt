@@ -1,4 +1,0 @@
-This code is an HTML file that includes a form for image enhancement. 
-The form includes two image containers and checkboxes for each that are associated. 
-The user will select either one, or both, depending on their needs. 
-The code specifies a CSS file (style.css) which will be used to style the webpage. 
